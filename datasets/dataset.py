@@ -20,14 +20,13 @@ AUDIO_PATH = "/share/rk6/shared/dcase22/TAU-urban-acoustic-scenes-2022-mobile-de
 DIR_PATH = "/share/rk6/shared/dcase22/ir_filters/external_devices/"
 TRAIN_FILES_CSV = "/share/rk6/shared/dcase22/TAU-urban-acoustic-scenes-2022-mobile-development/evaluation_setup/fold{}_train.csv"
 META_CSV = "/share/rk6/shared/dcase22/TAU-urban-acoustic-scenes-2022-mobile-development/meta.csv"
-TEST_FILES_CSV = "/share/rk6/shared/dcase22/TAU-urban-acoustic-scenes-2022-mobile-development//evaluation_setup/fold{}_evaluate.csv"
+TEST_FILES_CSV = "/share/rk6/shared/dcase22/TAU-urban-acoustic-scenes-2022-mobile-development/evaluation_setup/fold{}_evaluate.csv"
 CACHE_ROOT_PATH = "/share/rk6/shared/kofta_cached_datasets/d22t1_tobiasm/"
 
 
 class BasicDCASE22Dataset(TorchDataset):
     """
     Basic DCASE22 Dataset
-
     """
     def __init__(self):
         df = pd.read_csv(META_CSV, sep="\t")
@@ -65,7 +64,7 @@ class SpectrogramDataset(TorchDataset):
 
 
 def get_file_cached_dataset(name='d22t1'):
-    audio_processor = audio_processor = dict(
+    audio_processor = dict(
         identifier='resample22050',
         n_fft=2048,
         sr=22050,
@@ -76,7 +75,7 @@ def get_file_cached_dataset(name='d22t1'):
     )
 
     print("get_file_cached_dataset::", name, audio_processor['identifier'], "sr=", audio_processor['sr'],
-          cache_root_path)
+          CACHE_ROOT_PATH)
     ds = FilesCachedDataset(SpectrogramDataset, name, audio_processor['identifier'], CACHE_ROOT_PATH)
     return ds
 

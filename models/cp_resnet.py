@@ -329,9 +329,10 @@ class Network(nn.Module):
             return checkpoint_sequential([self.stage1, self.stage2, self.stage3], 3,
                                          (x))
 
+        if first_RUN: print("device: ", x.device)
+
         # stage 1
         x = self.stage1(x)
-
         if first_RUN: print("stage1:", x.size())
 
         # stage 2

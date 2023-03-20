@@ -240,7 +240,7 @@ class M(pl.LightningModule):
 
 
 def main():
-    trainer = pl.Trainer(max_epochs=50)
+    trainer = pl.Trainer(max_epochs=50, gpus=1)
 
     train_set = get_training_set(apply_dir=True, prob_dir=0.4)
     train_loader = DataLoader(dataset=train_set, batch_size=64, num_workers=10, shuffle=True,
