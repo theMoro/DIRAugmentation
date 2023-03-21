@@ -31,6 +31,20 @@ git clone https://github.com/theMoro/pytorch-lightning.git
 cd pytorch-lightning && python setup.py develop
 ```
 
+## Example
+
+To train the CP-ResNet model run: 
+
+```
+CUDA_VISIBLE_DEVICES=0 python -m main_cp_resnet
+```
+
+To train the PaSST model run: 
+
+```
+CUDA_VISIBLE_DEVICES=0 python -m main_passt
+```
+
 
 ## References
 [1] Florian Schmid, Shahed Masoudian, Khaled Koutini, and Gerhard Widmer, "Knowledge Distillation from Transformers for Low-Complexity Acoustic Scene Classification", in Proceedings of the 7th Detection and Classification of Acoustic Scenes and Events 2022 Workshop (DCASE2022), 2022.
