@@ -3,9 +3,7 @@ import pathlib
 import random
 
 import torch
-from ba3l.ingredients.datasets import Dataset
 import pandas as pd
-from sacred.config import DynamicIngredient, CMD
 from scipy.signal import convolve
 from scipy.fft import irfft, rfft
 from sklearn import preprocessing
@@ -21,7 +19,6 @@ DIR_PATH = "/share/rk6/shared/dcase22/ir_filters/external_devices/"
 TRAIN_FILES_CSV = "/share/rk6/shared/dcase22/TAU-urban-acoustic-scenes-2022-mobile-development/evaluation_setup/fold{}_train.csv"
 META_CSV = "/share/rk6/shared/dcase22/TAU-urban-acoustic-scenes-2022-mobile-development/meta.csv"
 TEST_FILES_CSV = "/share/rk6/shared/dcase22/TAU-urban-acoustic-scenes-2022-mobile-development/evaluation_setup/fold{}_evaluate.csv"
-CACHE_ROOT_PATH = "/share/rk6/shared/kofta_cached_datasets/d22t1_tobiasm/"
 
 
 class BasicDCASE22Dataset(TorchDataset):
@@ -49,9 +46,9 @@ class SpectrogramDataset(TorchDataset):
 
     """
 
-    def __init__(self):
+    def __init__(self, sr):
         self.ds = BasicDCASE22Dataset()
-        self.process_func = get_processor_default()
+        self.process_func = get_processor_default(sr=sr)
         self.audio_path = AUDIO_PATH
 
     def __getitem__(self, index):
@@ -63,11 +60,12 @@ class SpectrogramDataset(TorchDataset):
         return len(self.ds)
 
 
-def get_file_cached_dataset(name='d22t1'):
+def get_file_cached_dataset(sr, identifier, cache_root_path, name='d22t1'):
+
     audio_processor = dict(
-        identifier='resample22050',
+        identifier=identifier,
         n_fft=2048,
-        sr=22050,
+        sr=sr,
         mono=True,
         log_spec=False,
         n_mels=256,
@@ -75,16 +73,16 @@ def get_file_cached_dataset(name='d22t1'):
     )
 
     print("get_file_cached_dataset::", name, audio_processor['identifier'], "sr=", audio_processor['sr'],
-          CACHE_ROOT_PATH)
-    ds = FilesCachedDataset(SpectrogramDataset, name, audio_processor['identifier'], CACHE_ROOT_PATH)
+          cache_root_path)
+    ds = FilesCachedDataset(SpectrogramDataset, sr, name, audio_processor['identifier'], cache_root_path)
     return ds
 
 
-def get_base_training_set(fold=1, a_train_only=False, use_random_labels=False,
+def get_base_training_set(sr, identifier, cache_root_path, fold=1, a_train_only=False, use_random_labels=False,
                           use_all_meta_to_train=False):
     if use_all_meta_to_train:
         if a_train_only: raise RuntimeError("Not Implemented")
-        return get_file_cached_dataset()
+        return get_file_cached_dataset(sr=sr, identifier=identifier, cache_root_path=cache_root_path)
     ds = BasicDCASE22Dataset()
     training_files = pd.read_csv(TRAIN_FILES_CSV.format(fold), sep='\t')['filename'].values.reshape(-1)
     if a_train_only:
@@ -97,21 +95,27 @@ def get_base_training_set(fold=1, a_train_only=False, use_random_labels=False,
 
     training_files_set = set(training_files)
     train_indices = [i for i, f in enumerate(ds.files) if f in training_files_set]
-    ds = SimpleSelectionDataset(get_file_cached_dataset(), train_indices)
+    ds = SimpleSelectionDataset(
+        get_file_cached_dataset(sr=sr, identifier=identifier, cache_root_path=cache_root_path),
+        train_indices
+    )
 
     if use_random_labels:
         ds = RandomFixedLabelDataset(ds)
     return ds
 
 
-def get_base_test_set(fold=1):
+def get_base_test_set(sr, identifier, cache_root_path, fold=1):
     ds = BasicDCASE22Dataset()
     training_files = pd.read_csv(TEST_FILES_CSV.format(fold), sep='\t')['filename'].values.reshape(-1)
     training_files_set = set(training_files)
     train_indeces = [i for i, f in enumerate(ds.files) if f in training_files_set]
     devices = set([d.rsplit("-", 1)[1][:-4] for d in training_files])
     print("Validation Devices: ", devices)
-    return SimpleSelectionDataset(get_file_cached_dataset(), train_indeces)
+    return SimpleSelectionDataset(
+        get_file_cached_dataset(sr=sr, identifier=identifier, cache_root_path=cache_root_path),
+        train_indeces
+    )
 
 
 def get_roll_func(axis=2, shift=None, shift_range=4000):
@@ -133,7 +137,7 @@ def get_roll_func(axis=2, shift=None, shift_range=4000):
     return roll_func
 
 
-def load_dirs(dirs_path, cut_dirs_offset=None):
+def load_dirs(dirs_path, sr, cut_dirs_offset=None):
     all_paths = [path for path in pathlib.Path(os.path.expanduser(dirs_path)).rglob('*.wav')]
     all_paths = sorted(all_paths)
 
@@ -145,7 +149,7 @@ def load_dirs(dirs_path, cut_dirs_offset=None):
     for i in range(len(all_paths_name)):
         print(i, ": ", all_paths_name[i])
 
-    audio_processor = get_processor_default()
+    audio_processor = get_processor_default(sr=sr)
 
     return [audio_processor(p) for p in all_paths]
 
@@ -184,25 +188,31 @@ class DIRAugmentDataset(TorchDataset):
         return len(self.ds)
 
 
-def add_dir_augment_ds(ds, apply=False, prob=0.4):
+def add_dir_augment_ds(ds, sr, apply=False, prob=0.4):
     if not apply:
         return ds
-    return DIRAugmentDataset(ds, load_dirs(DIR_PATH), prob)
+    return DIRAugmentDataset(ds, load_dirs(DIR_PATH, sr=sr), prob)
 
 
-def get_training_set(normalize=False, roll=True, apply_dir=False, prob_dir=0.4):
-    ds = get_base_training_set()
+def get_training_set(normalize=False, roll=True, apply_dir=False, prob_dir=0.4,
+                     sr=22050, identifier='resample22050',
+                     cache_root_path="/share/rk6/shared/kofta_cached_datasets/d22t1_tobiasm/"):
+
+    ds = get_base_training_set(sr=sr, identifier=identifier, cache_root_path=cache_root_path)
     if normalize:
         print("normalized train!")
         fill_norms()
         ds = PreprocessDataset(ds, norm_func)
-    ds = add_dir_augment_ds(ds, apply=apply_dir, prob=prob_dir)
+    ds = add_dir_augment_ds(ds, sr, apply=apply_dir, prob=prob_dir)
     if roll:
         ds = PreprocessDataset(ds, get_roll_func())
     return ds
 
-def get_test_set(normalize=False, roll=True):
-    ds = get_base_test_set()
+def get_test_set(normalize=False, roll=True,
+                 sr=22050, identifier='resample22050',
+                 cache_root_path="/share/rk6/shared/kofta_cached_datasets/d22t1_tobiasm/"):
+
+    ds = get_base_test_set(sr=sr, identifier=identifier, cache_root_path=cache_root_path)
     if normalize:
         print("normalized test!")
         fill_norms()

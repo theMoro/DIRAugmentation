@@ -131,14 +131,14 @@ class PreprocessDataset(Dataset):
 
 
 class FilesCachedDataset(Dataset):
-    def __init__(self, get_dataset_func, dataset_name, x_name="",
+    def __init__(self, get_dataset_func, sr, dataset_name, x_name="",
                  cache_path="/home/tobi/dataset/dcase22/cached_dataset/",
                  ):
         self.dataset = None
 
         def getDataset():
             if self.dataset == None:
-                self.dataset = get_dataset_func()
+                self.dataset = get_dataset_func(sr=sr)
             return self.dataset
 
         self.get_dataset_func = getDataset
