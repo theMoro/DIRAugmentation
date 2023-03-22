@@ -31,15 +31,15 @@ git clone https://github.com/theMoro/pytorch-lightning.git
 cd pytorch-lightning && python setup.py develop
 ```
 
-## Example
+## Run experiments
 
-To train the CP-ResNet model run: 
+To train the **CP-ResNet** model run: 
 
 ```
 CUDA_VISIBLE_DEVICES=0 python -m main_cp_resnet
 ```
 
-To train the PaSST model run: 
+To train the **PaSST** model run: 
 
 ```
 CUDA_VISIBLE_DEVICES=0 python -m main_passt
