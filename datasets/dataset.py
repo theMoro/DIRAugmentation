@@ -164,7 +164,6 @@ class DIRAugmentDataset(TorchDataset):
         self.ds = ds
         self.dirs = dirs
         self.prob = prob
-        self.audio_path = AUDIO_PATH
 
     def __getitem__(self, index):
         x, file, label = self.ds[index]

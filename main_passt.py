@@ -82,8 +82,8 @@ class M(pl.LightningModule):
                               's4': "unseen", 's5': "unseen", 's6': "unseen"}
 
         self.mixup_alpha = 0.0
-        self.mixstyle_p = 0.4
-        self.mixstyle_alpha = 0.4
+        self.mixstyle_p = 0.0
+        self.mixstyle_alpha = 0.0
         self.calc_device_info = True
         self.epoch = 0
 

@@ -36,7 +36,7 @@ def l1_regularize(model, l1_lambda=0):
     return l1_lambda * loss
 
 
-def get_scheduler_lambda(warm_up_len=20, ramp_down_start=50, ramp_down_len=100, last_lr_value=0.01, nr_of_epochs=30,
+def get_scheduler_lambda(warm_up_len=5, ramp_down_start=15, ramp_down_len=25, last_lr_value=0.04, nr_of_epochs=50,
                          schedule_mode="exp_lin"):
     if schedule_mode == "exp_lin":
         return exp_warmup_linear_down(warm_up_len, ramp_down_len, ramp_down_start, last_lr_value)
