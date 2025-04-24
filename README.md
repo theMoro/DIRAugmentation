@@ -1,7 +1,7 @@
 # Device Impulse Response Augmentation
 
 Improving recording device generalization using impulse responses (IRs) of recording devices. \
-This code is the official repository for the paper **Device-Robust Acoustic Scene Classification via Impulse Response Augmentation** submitted to [EUSIPCO 2023](https://eusipco2023.org/). 
+This code is the official repository for the paper [**Device-Robust Acoustic Scene Classification via Impulse Response Augmentation**](https://arxiv.org/abs/2305.07499) submitted to [EUSIPCO 2023](https://eusipco2023.org/). 
 
 As described in the paper, this augmentation significantly enhances the generalization performance of models. \
 Furthermore, **DIR augmentation** and **Freq-MixStyle** [1, 2] are complementary, achieving a **new state-of-the art performance** on signals 
